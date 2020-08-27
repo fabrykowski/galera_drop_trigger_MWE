@@ -1,0 +1,39 @@
+version: '2.1'
+
+services:
+    db00:
+        image: 'bitnami/mariadb-galera:10.5.5'
+        environment:
+            - MARIADB_ROOT_PASSWORD=password
+            - MARIADB_GALERA_CLUSTER_BOOTSTRAP=yes
+            - MARIADB_GALERA_CLUSTER_NAME=my_galera
+            - MARIADB_GALERA_CLUSTER_ADDRESS=gcomm://db00,db01,db02
+            - MARIADB_GALERA_MARIABACKUP_USER=my_mariabackup_user
+            - MARIADB_GALERA_MARIABACKUP_PASSWORD=backup_pass
+        healthcheck:
+            test: ['CMD', '/opt/bitnami/scripts/mariadb/healthcheck.sh']
+            interval: 2s
+            timeout: 1s
+            retries: 60
+    db01:
+        image: 'bitnami/mariadb-galera:10.5.5'
+        environment:
+            - MARIADB_GALERA_CLUSTER_NAME=my_galera
+            - MARIADB_GALERA_CLUSTER_ADDRESS=gcomm://db00,db01,db02
+            - MARIADB_GALERA_MARIABACKUP_USER=my_mariabackup_user
+            - MARIADB_GALERA_MARIABACKUP_PASSWORD=backup_pass
+            - MARIADB_ROOT_PASSWORD=password
+        depends_on:
+            db00:
+                condition: service_healthy
+    db02:
+        image: 'bitnami/mariadb-galera:10.5.5'
+        environment:
+            - MARIADB_GALERA_CLUSTER_NAME=my_galera
+            - MARIADB_GALERA_CLUSTER_ADDRESS=gcomm://db00,db01,db02
+            - MARIADB_GALERA_MARIABACKUP_USER=my_mariabackup_user
+            - MARIADB_GALERA_MARIABACKUP_PASSWORD=backup_pass
+            - MARIADB_ROOT_PASSWORD=password
+        depends_on:
+            db00:
+                condition: service_healthy
